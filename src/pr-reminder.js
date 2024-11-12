@@ -49,14 +49,14 @@ async function formatSinglePR(pullRequest) {
     return `\n👉 <${link} | ${title}> | ${author} | *${reviewers.length} pending reviewers${reviewers.length > 1 ? `: ${reviewers.join(', ')}` : ''}* | ${mergeableState}`;
 }
 
-function formatSlackMessage(repoName, text, pullRequestCount) {
+function formatSlackMessage(text, pullRequestCount) {
     return {
         blocks: [
             {
                 type: 'section',
                 text: {
                     type: 'mrkdwn',
-                    text: `\n*${repoName}* has ${pullRequestCount} PRs ready for review`,
+                    text: `\n*${repoInfo.repo}* has ${pullRequestCount} PRs ready for review`,
                 },
             },
             {
@@ -76,13 +76,27 @@ function formatSlackMessage(repoName, text, pullRequestCount) {
     };
 }
 
+function emptySlackMessage() {
+    return {
+        blocks: [
+            {
+                type: 'section',
+                text: {
+                    type: 'mrkdwn',
+                    text: `\n*${repoInfo.repo}* has 0 PRs ready for review`,
+                },
+            }
+        ],
+    };
+}
+
 
 async function sendReminder() {
     const pullRequests = await getOpenPRs()
         .then(pullRequest => pullRequest.filter(pullRequest => !pullRequest.draft));
 
     if (pullRequests.length === 0) {
-        await sendSlackMessage(slackChannel, '👍 No PRs waiting for review!');
+        await sendSlackMessage(slackChannel, emptySlackMessage());
         return;
     }
 
@@ -91,7 +105,7 @@ async function sendReminder() {
         text += await formatSinglePR(pullRequest);
     }
 
-    const message = formatSlackMessage(repoInfo.repo, text, pullRequests.length);
+    const message = formatSlackMessage(text, pullRequests.length);
     await sendSlackMessage(slackChannel, message);
 }
 

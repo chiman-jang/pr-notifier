@@ -29,6 +29,7 @@ runs:
     - name: pr-reminder
       shell: bash
       run: node src/pr-reminder.js
+      working-directory: '${{ github.action_path }}'
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
         SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
